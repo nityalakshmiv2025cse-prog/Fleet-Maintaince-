@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleet Tire Maintenance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--road:#2c3238;--road2:#3a424a;--paper:#f2f3ef;--card:#fff;--line:#d9dbd3;--ink:#22272c;--mute:#69717a;--line-yellow:#f0b400;--bad:#c23b2e;--good:#2b7a4b}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 Barlow,system-ui,sans-serif;color:var(--ink);background:var(--paper);display:flex;min-height:100vh}
+nav{width:220px;background:var(--road);color:#e9ebe6;padding:22px 14px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+nav h1{font:700 22px/1.1 'Barlow Condensed',sans-serif;margin:0 8px 18px;letter-spacing:.3px}
+nav h1 small{display:block;font:400 12px Barlow;color:#aab1b8;margin-top:4px}
+nav button{background:none;border:0;color:inherit;text-align:left;padding:10px 12px;font:500 15px Barlow;border-radius:4px;cursor:pointer;border-left:4px solid transparent}
+nav button:hover{background:var(--road2)}
+nav button.on{background:var(--road2);border-left-color:var(--line-yellow)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--line-yellow);outline-offset:2px}
+main{flex:1;padding:28px 32px;max-width:1100px}
+h2{font:700 28px 'Barlow Condensed',sans-serif;margin:0 0 16px}
+h3{font:600 18px 'Barlow Condensed',sans-serif;margin:0 0 10px}
+section{display:none}section.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);padding:14px 16px;border-top:4px solid var(--line-yellow)}
+.stat b{display:block;font:700 30px 'Barlow Condensed'}
+.stat span{color:var(--mute);font-size:13px}
+.stat.warn{border-top-color:var(--bad)}
+.panel{background:var(--card);border:1px solid var(--line);padding:16px;margin-bottom:20px;overflow-x:auto}
+form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mute);gap:3px;font-weight:500}
+input,select{font:15px Barlow;padding:8px 10px;border:1px solid #b9bdb4;background:#fff;min-width:120px}
+.btn{background:var(--road);color:#fff;border:0;padding:9px 16px;font:600 14px Barlow;cursor:pointer;border-radius:3px}
+.btn:hover{background:var(--road2)}
+.btn.y{background:var(--line-yellow);color:#22272c}
+.btn.sm{padding:4px 10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--mute);border-bottom:2px solid var(--road);padding:6px 8px;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600;background:#e6e8e1}
+.tag.OPEN,.tag.UNPAID,.tag.ORDERED{background:#fbe9c2}.tag.DONE,.tag.PAID{background:#d3ecd9}.tag.BILLED{background:#d6e4f5}
+.low{color:var(--bad);font-weight:600}.neg{color:var(--bad)}.pos{color:var(--good)}
+.empty{color:var(--mute);padding:8px 0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+tr.tot td{font-weight:700;border-top:2px solid var(--road)}
+#toast{position:fixed;right:20px;bottom:20px;background:var(--road);color:#fff;padding:12px 18px;border-left:5px solid var(--line-yellow);max-width:380px;display:none}
+#toast.err{border-left-color:var(--bad)}
+@media(max-width:760px){body{flex-direction:column}nav{width:100%;flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%;margin:0 4px 6px}main{padding:18px}}
+@media(prefers-reduced-motion:no-preference){#toast{transition:opacity .2s}}
+</style>
+</head>
+<body>
+<nav>
+  <h1>Fleet Tire Desk<small>Heavy Transport Division 2</small></h1>
+  <button data-t="overview" class="on">Tire pressure</button>
+  <button data-t="fleet">Vehicles</button>
+  <button data-t="buy">Tire procurement</button>
+  <button data-t="bill">Customer invoices</button>
+  <button data-t="rep">Reports and budget</button>
+</nav>
+<main>
+<section id="overview" class="on">
+  <h2>Tire pressure</h2>
+  <div class="stats" id="stats"></div>
+  <div class="panel">
+    <h3>Record a pressure reading</h3>
+    <form id="fTel">
+      <label>Vehicle<select name="vehicleId" id="selVeh" required></select></label>
+      <label>Tire position<select name="tirePosition"><option>Front left</option><option>Front right</option><option>Rear left 1</option><option>Rear right 1</option><option>Rear left 2</option><option>Rear right 2</option></select></label>
+      <label>Pressure (PSI)<input name="psi" type="number" step="0.1" min="0" required value="32"></label>
+      <label>Tread wear (%)<input name="wearPercent" type="number" step="1" min="0" max="100" value="20"></label>
+      <button class="btn y">Save reading</button>
+    </form>
+    <p class="empty">Readings below 28 PSI open a service ticket automatically.</p>
+  </div>
+  <div class="panel"><h3>Open service tickets</h3><div id="alerts"></div></div>
+  <div class="panel"><h3>Latest readings</h3><div id="tel"></div></div>
+</section>
+
+<section id="fleet">
+  <h2>Vehicles</h2>
+  <div class="panel"><form id="fVeh">
+    <label>Plate number<input name="plateNo" required placeholder="TN-72-XX-0000"></label>
+    <label>Model<input name="model" required></label>
+    <label>Division<input name="division" required value="Heavy Transport Division 2"></label>
+    <button class="btn y">Add vehicle</button></form></div>
+  <div class="panel" id="vehicles"></div>
+</section>
+
+<section id="buy">
+  <h2>Tire procurement</h2>
+  <div class="stats" id="stock"></div>
+  <div class="panel"><h3>New purchase order</h3><form id="fPo">
+    <label>Manufacturer<select name="vendorId" id="selVen" required></select></label>
+    <label>Product<select name="productId" id="selProd" required></select></label>
+    <label>Quantity<input name="qty" type="number" min="1" value="4" required></label>
+    <label>Unit cost (₹)<input name="unitCost" type="number" min="1" value="18000" required></label>
+    <label>Division<input name="division" value="Heavy Transport Division 2"></label>
+    <button class="btn y">Issue PO</button></form></div>
+  <div class="panel" id="pos"></div>
+</section>
+
+<section id="bill">
+  <h2>Customer invoices</h2>
+  <div class="panel"><h3>New invoice for transit service</h3><form id="fInv">
+    <label>Customer<select name="customerId" id="selCust" required></select></label>
+    <label>Description<input name="description" required value="Fleet transit service"></label>
+    <label>Amount (₹)<input name="amount" type="number" min="1" value="12000" required></label>
+    <label>Division<input name="division" value="Heavy Transport Division 2"></label>
+    <button class="btn y">Create invoice</button></form></div>
+  <div class="panel" id="invs"></div>
+</section>
+
+<section id="rep">
+  <h2>Reports and budget</h2>
+  <div class="two">
+    <div class="panel"><h3>Balance sheet</h3><div id="bs"></div></div>
+    <div class="panel"><h3>Profit and loss</h3><div id="pl"></div></div>
+  </div>
+  <div class="panel"><h3>Division budget</h3>
+    <form id="fBud">
+      <label>Division<input name="division" value="Heavy Transport Division 2" required></label>
+      <label>Allocated (₹)<input name="allocated" type="number" min="0" value="250000" required></label>
+      <button class="btn y">Save budget</button></form>
+    <div id="bud" style="margin-top:14px"></div></div>
+</section>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '₹' + Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0});
+const when = d => d ? new Date(d).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'}) : '';
+
+async function api(path, method = 'GET', body) {
+  const r = await fetch('/api' + path, {method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Request failed (' + r.status + ')');
+  return j;
+}
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = err ? 'err' : ''; t.style.display = 'block';
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 4500);
+}
+async function run(fn) { try { await fn(); await load(); } catch (e) { toast(e.message, true); } }
+
+// cols: [header, fn(row), className]
+function table(cols, rows, empty) {
+  if (!rows.length) return '<div class="empty">' + empty + '</div>';
+  return '<table><thead><tr>' + cols.map(c => `<th class="${c[2] || ''}">${c[0]}</th>`).join('') + '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + cols.map(c => `<td class="${c[2] || ''}">${c[1](r)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+}
+const tag = s => `<span class="tag ${s}">${s}</span>`;
+const opts = (list, label) => list.map(x => `<option value="${x.id}">${esc(label(x))}</option>`).join('');
+const formData = (f, nums) => { const o = Object.fromEntries(new FormData(f)); nums.forEach(k => o[k] = Number(o[k])); return o; };
+
+let S = {};
+async function load() {
+  const [vehicles, alerts, contacts, products, pos, invs, tel, bs, pl, bud] = await Promise.all([
+    api('/fleet/vehicles'), api('/fleet/maintenance-alerts'), api('/contacts'), api('/products'),
+    api('/purchase-orders'), api('/invoices'), api('/fleet/telemetry'),
+    api('/reports/balance-sheet'), api('/reports/profit-loss'), api('/reports/budget')]);
+  S = {vehicles, contacts, products};
+  const veh = id => (vehicles.find(v => v.id === id) || {}).plateNo || '#' + id;
+  const con = id => (contacts.find(c => c.id === id) || {}).name || '#' + id;
+  const prod = id => (products.find(p => p.id === id) || {}).name || '#' + id;
+  const tire = products.find(p => p.kind === 'GOODS') || {stock: 0, price: 0};
+  const cash = (bs.assets.find(a => a.account === 'Cash') || {amount: 0}).amount;
+
+  const keep = ['#selVeh', '#selVen', '#selProd', '#selCust'].map(s => $(s).value);
+  $('#selVeh').innerHTML = opts(vehicles, v => v.plateNo + ' · ' + v.model);
+  $('#selVen').innerHTML = opts(contacts.filter(c => c.kind === 'VENDOR'), c => c.name);
+  $('#selCust').innerHTML = opts(contacts.filter(c => c.kind === 'CUSTOMER'), c => c.name);
+  $('#selProd').innerHTML = opts(products.filter(p => p.kind === 'GOODS'), p => p.name);
+  ['#selVeh', '#selVen', '#selProd', '#selCust'].forEach((s, i) => { if (keep[i]) $(s).value = keep[i]; });
+
+  $('#stats').innerHTML = [
+    ['Vehicles', vehicles.length, ''], ['Open tickets', alerts.length, alerts.length ? 'warn' : ''],
+    ['Tires in stock', tire.stock, tire.stock < 4 ? 'warn' : ''], ['Cash', money(cash), '']
+  ].map(s => `<div class="stat ${s[2]}"><b>${s[1]}</b><span>${s[0]}</span></div>`).join('');
+  $('#stock').innerHTML = `<div class="stat ${tire.stock < 4 ? 'warn' : ''}"><b>${tire.stock}</b><span>${esc(tire.name || 'Tires')} in stock</span></div>`;
+
+  $('#alerts').innerHTML = table([
+    ['Ticket', t => '#' + t.id], ['Vehicle', t => esc(veh(t.vehicleId))], ['Tire', t => esc(t.tirePosition)],
+    ['Reason', t => esc(t.reason)], ['Opened', t => when(t.createdAt)],
+    ['', t => `<button class="btn sm" onclick="closeTicket(${t.id},false)">Close</button> <button class="btn sm y" onclick="closeTicket(${t.id},true)">Replace tire</button>`]
+  ], alerts, 'No open tickets. All tires are within limits.');
+  $('#tel').innerHTML = table([
+    ['Time', r => when(r.readAt)], ['Vehicle', r => esc(veh(r.vehicleId))], ['Tire', r => esc(r.tirePosition)],
+    ['PSI', r => `<span class="${r.psi < 28 ? 'low' : ''}">${r.psi}</span>`, 'n'], ['Wear', r => r.wearPercent + '%', 'n']
+  ], tel.slice(0, 10), 'No readings yet.');
+
+  $('#vehicles').innerHTML = table([['Plate', v => esc(v.plateNo)], ['Model', v => esc(v.model)], ['Division', v => esc(v.division)], ['Status', v => tag(v.status)]], vehicles, 'No vehicles yet.');
+
+  $('#pos').innerHTML = table([
+    ['PO', p => '#' + p.id], ['Manufacturer', p => esc(con(p.vendorId))], ['Product', p => esc(prod(p.productId))],
+    ['Qty', p => p.qty, 'n'], ['Total', p => money(p.qty * p.unitCost), 'n'], ['Status', p => tag(p.status)],
+    ['', p => p.status === 'ORDERED' ? `<button class="btn sm" onclick="act('/purchase-orders/${p.id}/bill','Vendor bill posted, stock updated')">Receive and bill</button>`
+            : p.status === 'BILLED' ? `<button class="btn sm y" onclick="act('/purchase-orders/${p.id}/pay','Paid from bank')">Pay bill</button>` : '']
+  ], pos, 'No purchase orders yet.');
+
+  $('#invs').innerHTML = table([
+    ['Invoice', i => '#' + i.id], ['Customer', i => esc(con(i.customerId))], ['Description', i => esc(i.description)],
+    ['Amount', i => money(i.amount), 'n'], ['Status', i => tag(i.status)],
+    ['', i => i.status === 'UNPAID' ? `<button class="btn sm y" onclick="act('/invoices/${i.id}/pay','Payment received in bank')">Record payment</button>` : '']
+  ], invs, 'No invoices yet.');
+
+  const rows = (l) => l.map(x => `<tr><td>${esc(x.account)}</td><td class="n">${money(x.amount)}</td></tr>`).join('');
+  $('#bs').innerHTML = `<table><tr><th colspan="2">Assets</th></tr>${rows(bs.assets)}<tr class="tot"><td>Total assets</td><td class="n">${money(bs.totalAssets)}</td></tr>
+    <tr><th colspan="2">Liabilities</th></tr>${rows(bs.liabilities) || '<tr><td colspan="2" class="empty">None</td></tr>'}
+    <tr><th colspan="2">Equity</th></tr>${rows(bs.equity)}<tr class="tot"><td>Liabilities and equity</td><td class="n">${money(bs.totalLiabilitiesAndEquity)}</td></tr></table>`;
+  $('#pl').innerHTML = `<table><tr><th colspan="2">Income</th></tr>${rows(pl.income) || '<tr><td colspan="2" class="empty">No income yet</td></tr>'}
+    <tr><th colspan="2">Expenses</th></tr>${rows(pl.expenses) || '<tr><td colspan="2" class="empty">No expenses yet</td></tr>'}
+    <tr class="tot"><td>Net profit</td><td class="n ${pl.netProfit < 0 ? 'neg' : 'pos'}">${money(pl.netProfit)}</td></tr></table>`;
+  $('#bud').innerHTML = table([
+    ['Division', b => esc(b.division)], ['Allocated', b => money(b.allocated), 'n'], ['Actual expense', b => money(b.actual), 'n'],
+    ['Variance', b => `<span class="${b.variance < 0 ? 'neg' : 'pos'}">${money(b.variance)}</span>`, 'n']
+  ], bud, 'No budgets set.');
+}
+
+function act(path, msg) { run(async () => { await api(path, 'POST', {}); toast(msg); }); }
+function closeTicket(id, replaceTire) {
+  const cost = prompt('Labour or alignment cost in ₹ (0 if none):', '2500');
+  if (cost === null) return;
+  run(async () => { await api(`/fleet/tickets/${id}/complete`, 'POST', {cost: Number(cost) || 0, replaceTire}); toast('Ticket closed'); });
+}
+
+$('#fTel').onsubmit = e => { e.preventDefault(); run(async () => {
+  const r = await api('/fleet/telemetry', 'POST', formData(e.target, ['vehicleId', 'psi', 'wearPercent']));
+  toast(r.ticketCreated ? 'Low pressure. Service ticket #' + r.ticket.id + ' opened.' : r.reading.psi < 28 ? 'Low pressure. A ticket is already open for this tire.' : 'Reading saved. Pressure is fine.');
+}); };
+$('#fVeh').onsubmit = e => { e.preventDefault(); run(async () => { await api('/fleet/vehicles', 'POST', formData(e.target, [])); e.target.reset(); toast('Vehicle added'); }); };
+$('#fPo').onsubmit = e => { e.preventDefault(); run(async () => { await api('/purchase-orders', 'POST', formData(e.target, ['vendorId', 'productId', 'qty', 'unitCost'])); toast('Purchase order issued'); }); };
+$('#fInv').onsubmit = e => { e.preventDefault(); run(async () => { await api('/invoices', 'POST', formData(e.target, ['customerId', 'amount'])); toast('Invoice created'); }); };
+$('#fBud').onsubmit = e => { e.preventDefault(); run(async () => { await api('/budgets', 'POST', formData(e.target, ['allocated'])); toast('Budget saved'); }); };
+
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button,section').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); $('#' + b.dataset.t).classList.add('on');
+});
+load().catch(e => toast(e.message, true));
+</script>
+</body>
+</html>
